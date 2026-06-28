@@ -35,13 +35,26 @@ CREATE TABLE companies (
 -- ============================================================
 CREATE TABLE users (
     id              BIGSERIAL PRIMARY KEY,
-    company_id      BIGINT REFERENCES companies(id),
     email           VARCHAR(150) NOT NULL UNIQUE,
     password_hash   VARCHAR(255) NOT NULL,
     full_name       VARCHAR(150),
     is_active       BOOLEAN NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
+-- 2b. USER_COMPANIES
+-- Join table: one user can own up to 5 companies.
+-- ============================================================
+CREATE TABLE user_companies (
+    id          BIGSERIAL PRIMARY KEY,
+    user_id     BIGINT NOT NULL REFERENCES users(id),
+    company_id  BIGINT NOT NULL REFERENCES companies(id),
+    role        VARCHAR(50) NOT NULL DEFAULT 'OWNER',
+    is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+    UNIQUE (user_id, company_id)
 );
 
 
