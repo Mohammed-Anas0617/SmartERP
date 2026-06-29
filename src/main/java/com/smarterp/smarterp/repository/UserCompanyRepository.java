@@ -16,4 +16,6 @@ public interface UserCompanyRepository extends JpaRepository<UserCompany, Long> 
 
     // Find a specific user-company link (used for update/delete, to verify ownership)
     Optional<UserCompany> findByUserIdAndCompanyIdAndIsActiveTrue(Long userId, Long companyId);
+
+    boolean existsByUserIdAndCompanyIdAndIsActiveTrue(Long id, Long companyId);
 }
