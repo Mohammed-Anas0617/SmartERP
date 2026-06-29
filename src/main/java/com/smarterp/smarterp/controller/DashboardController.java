@@ -4,6 +4,7 @@ import com.smarterp.smarterp.dto.DashboardResponse;
 import com.smarterp.smarterp.entity.Company;
 import com.smarterp.smarterp.repository.CompanyRepository;
 import com.smarterp.smarterp.security.CompanyContextHolder;
+import com.smarterp.smarterp.service.LedgerService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -11,9 +12,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class DashboardController {
 
     private final CompanyRepository companyRepository;
+    private final LedgerService ledgerService;
 
-    public DashboardController(CompanyRepository companyRepository) {
+    public DashboardController(CompanyRepository companyRepository, LedgerService ledgerService) {
         this.companyRepository = companyRepository;
+        this.ledgerService = ledgerService;
     }
 
     @GetMapping("/api/dashboard")
@@ -32,7 +35,7 @@ public class DashboardController {
                 company.getId(),
                 company.getName(),
                 company.getGstNumber(),
-                0L,  // ledgerCount - wired up in Day 6
+                ledgerService.countLedgers(companyId),// ledgerCount - wired up in Day 6
                 0L,  // stockItemCount - wired up in Day 8
                 0L   // voucherCount - wired up in Day 9/10
         );
