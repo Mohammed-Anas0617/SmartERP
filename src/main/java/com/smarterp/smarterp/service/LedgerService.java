@@ -3,6 +3,7 @@ package com.smarterp.smarterp.service;
 import com.smarterp.smarterp.dto.LedgerRequestDto;
 import com.smarterp.smarterp.dto.LedgerResponseDto;
 import com.smarterp.smarterp.entity.Company;
+import com.smarterp.smarterp.entity.Group;
 import com.smarterp.smarterp.entity.Ledger;
 import com.smarterp.smarterp.repository.CompanyRepository;
 import com.smarterp.smarterp.repository.LedgerRepository;
@@ -15,10 +16,14 @@ public class LedgerService {
 
     private final LedgerRepository ledgerRepository;
     private final CompanyRepository companyRepository;
+    private final GroupService groupService;
 
-    public LedgerService(LedgerRepository ledgerRepository, CompanyRepository companyRepository) {
+    public LedgerService(LedgerRepository ledgerRepository,
+                         CompanyRepository companyRepository,
+                         GroupService groupService) {
         this.ledgerRepository = ledgerRepository;
         this.companyRepository = companyRepository;
+        this.groupService = groupService;
     }
 
     public LedgerResponseDto createLedger(Long companyId, LedgerRequestDto request) {
@@ -39,6 +44,12 @@ public class LedgerService {
         ledger.setAddress(request.getAddress());
         ledger.setContactNumber(request.getContactNumber());
         ledger.setActive(true);
+
+        // Resolve and attach group, if provided
+        if (request.getGroupId() != null) {
+            Group group = groupService.getGroupEntityById(companyId, request.getGroupId());
+            ledger.setGroup(group);
+        }
 
         Ledger saved = ledgerRepository.save(ledger);
         return toResponseDto(saved);
@@ -71,6 +82,17 @@ public class LedgerService {
         ledger.setGstNumber(request.getGstNumber());
         ledger.setAddress(request.getAddress());
         ledger.setContactNumber(request.getContactNumber());
+        // Note: openingBalance and currentBalance are intentionally NOT updated here.
+        // Changing opening balance after vouchers exist would corrupt accounting history.
+
+        // Only touch the group if groupId is explicitly provided.
+        // Omitting groupId from the request leaves the existing assignment unchanged,
+        // so partial updates (e.g. just editing a phone number) don't accidentally
+        // wipe out group classification needed for Balance Sheet/P&L reports later.
+        if (request.getGroupId() != null) {
+            Group group = groupService.getGroupEntityById(companyId, request.getGroupId());
+            ledger.setGroup(group);
+        }
 
         Ledger updated = ledgerRepository.save(ledger);
         return toResponseDto(updated);
@@ -88,7 +110,7 @@ public class LedgerService {
     }
 
     private LedgerResponseDto toResponseDto(Ledger ledger) {
-        return LedgerResponseDto.builder()
+        LedgerResponseDto.LedgerResponseDtoBuilder builder = LedgerResponseDto.builder()
                 .id(ledger.getId())
                 .name(ledger.getName())
                 .type(ledger.getType())
@@ -99,7 +121,13 @@ public class LedgerService {
                 .contactNumber(ledger.getContactNumber())
                 .isActive(ledger.isActive())
                 .createdAt(ledger.getCreatedAt())
-                .updatedAt(ledger.getUpdatedAt())
-                .build();
+                .updatedAt(ledger.getUpdatedAt());
+
+        if (ledger.getGroup() != null) {
+            builder.groupId(ledger.getGroup().getId())
+                    .groupName(ledger.getGroup().getName());
+        }
+
+        return builder.build();
     }
 }

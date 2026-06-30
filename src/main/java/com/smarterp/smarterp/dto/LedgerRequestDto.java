@@ -27,4 +27,7 @@ public class LedgerRequestDto {
     private String address;
 
     private String contactNumber;
+
+    // Optional - existing ledgers can stay ungrouped for now
+    private Long groupId;
 }

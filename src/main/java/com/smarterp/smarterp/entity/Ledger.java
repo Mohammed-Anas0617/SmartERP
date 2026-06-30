@@ -45,6 +45,12 @@ public class Ledger {
     @Column(name = "contact_number", length = 20)
     private String contactNumber;
 
+    // Links this ledger to its accounting Group.
+    // Nullable because existing ledgers from Day 6 have no group assigned yet.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private Group group;
+
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
 
